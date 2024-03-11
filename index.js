@@ -2,10 +2,46 @@ var express = require('express');
 var cors = require('cors');
 var multer = require('multer');
 const { urlencoded } = require("body-parser"); //to get the post result from the html and more
-const upload = multer({ dest: 'uploads/' })
-require('dotenv').config()
-
+const upload = multer({ dest: 'uploads/' });
+require('dotenv').config();
+var sql = require("mssql");
 var app = express();
+
+
+app.get('/data', function (req,res) {
+  var config ={
+    user: process.env.USER,
+    password: process.env.PASSWORD,
+    server: process.env.SERVER, 
+    database: process.env.DATABASE,
+      options: {
+      encrypt: true,
+      trustServerCertificate: true // Change this to false in production!!!
+  }
+  };
+
+
+      // connect to your database
+      sql.connect(config, function (err) {
+    
+        if (err) console.log(err);
+
+        // create Request object
+        var request = new sql.Request();
+           
+        // query to the database and get the records
+        request.query('select * from Users', function (err, recordset) {
+            
+            if (err) console.log(err)
+
+            // send records as a response
+            res.send(recordset);
+            
+        });
+    });
+})
+
+
 
 app.use(cors());
 //app.use(multer);
@@ -19,6 +55,10 @@ app.get('/', function (req, res) {
 app.get('/views/logo.jpg', function (req, res) {
   res.sendFile(process.cwd() + '/views/logo.jpg');
 });
+
+app.get('/data', function(req,res) {
+
+})
 
 
 
