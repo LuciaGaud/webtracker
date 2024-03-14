@@ -5,6 +5,8 @@ const { urlencoded } = require("body-parser"); //to get the post result from the
 const upload = multer({ dest: "uploads/" });
 const registered = [];
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const Papa = require("papaparse");
 require("dotenv").config();
 var sql = require("mssql");
 var app = express();
@@ -19,6 +21,7 @@ var config = {
   },
 };
 
+app.set("view engine", "ejs");
 app.use(express.json());
 app.use(cors());
 //app.use(multer);
@@ -28,7 +31,10 @@ app.use(express.urlencoded({ extended: true })); // In short this makes req.body
 app.get("/data", function (req, res) {
   // connect to your database
   sql.connect(config, function (err) {
-    if (err) console.log(err);
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Failed to connect to the database");
+    }
 
     // create Request object
     var request = new sql.Request();
@@ -69,35 +75,53 @@ app.post("/loggedin", async function (req, res) {
         FROM Users
         WHERE Email = @email
     `;
-  
+
     request.input("email", sql.NVarChar(50), req.body.email);
     const result = await request.query(query);
     await sql.close;
     console.log(result.recordset[0]);
 
-    
-
-    try{
+    try {
       console.log(result.recordset[0].Password);
-        if (result.recordset[0].Password == null){
-         res.send("no user found");
-          rertun;}
-         const valid = await bcrypt.compare(req.body.password, result.recordset[0].Password); console.log(valid);
-        if (valid){
-          console.log("You are logged in");
-          res.send("you are logged in");
-    }  
-        } catch{
-          console.log("No username and/or massword match")
-          res.status(500).send("no user name or password matched")
-        }
+      if (result.recordset[0].Password == null) {
+        res.send("no user found");
+        return;
+      }
+      const valid = await bcrypt.compare(
+        req.body.password,
+        result.recordset[0].Password
+      );
+      console.log(valid);
+      if (valid) {
+        console.log("You are logged in");
+        const company = result.recordset[0].CompanyCode;
+        console.log("company", company);
 
-   
-    
-   
+        const content = fs.readFileSync("data/data.csv", "utf8");
+        // console.log(content);
+
+        // Replace 'YourColumnName' with the actual column name you want to filter by
+        // Replace 'YourValue' with the value you want the column to match
+        Papa.parse(content, {
+          header: true,
+          complete: async function (result) {
+            const filteredData = result.data.filter(function (row) {
+              return row.Carrier === company;
+            });
+            console.log("filtered data", filteredData);
+            res.render("entries", { data: filteredData });
+          },
+        });
+
+        //   res.sendFile(process.cwd() + "/views/entries.ejs")
+      }
+    } catch {
+      console.log("No username and/or massword match");
+      res.status(500).send("no user name or password matched");
+    }
   });
 });
-
+//-------------Registration endpoint-----------------
 app.post("/registered", async function (req, res) {
   console.log("email is ", req.body.email);
   //const salt = await bcrypt.genSalt(10);
@@ -111,7 +135,10 @@ app.post("/registered", async function (req, res) {
   // connect to your database
 
   sql.connect(config, async function (err) {
-    if (err) console.log(err);
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Failed to connect to the database");
+    }
 
     // create Request object
     var request = new sql.Request();
@@ -128,7 +155,7 @@ app.post("/registered", async function (req, res) {
     //req.body.companyCode','req.body.email','hashedPassword', 'salt'
     const result = await request.query(query);
     console.log(result);
-    await sql.close;
+    await sql.close();
     res.send("You are registered");
   });
 });
