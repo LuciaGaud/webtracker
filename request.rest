@@ -1,0 +1,25 @@
+GET http://localhost:3000
+
+#########
+
+POST http://localhost:3000/loggedin 
+Content-Type: text/xml
+
+{ 
+    "email": "lucia.e@iclgo.com",
+    "companyCode" : "INTCARLON",
+    "password": "IndovinaChi2024"
+}
+
+
+##########
+
+POST http://localhost:3000/registered
+Content-Type: application/json
+
+{ 
+    "email": "lucia.e@iclgo.com",
+    "companyCode" : "INTCARLON",
+    "password": "IndovinaChi2024"
+
+}
