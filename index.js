@@ -51,21 +51,62 @@ app.get("/views/logo.jpg", function (req, res) {
   res.sendFile(process.cwd() + "/views/logo.jpg");
 });
 
-app.post("/loggedin", function (req, res) {
+app.post("/loggedin", async function (req, res) {
+  console.log("email is ", req.body.email);
+  console.log("the password is", req.body.password); // To remove in production!!!
   console.log("I received a post request on /loggedin");
-  res.send("I received a post request on /loggedin");
+  // connect to your database
+
+  sql.connect(config, async function (err) {
+    if (err) console.log(err);
+
+    // create Request object
+    var request = new sql.Request();
+
+    // query to the database and get the records
+    const query = `
+        SELECT  CompanyCode,Email,Password,Salt
+        FROM Users
+        WHERE Email = @email
+    `;
+  
+    request.input("email", sql.NVarChar(50), req.body.email);
+    const result = await request.query(query);
+    await sql.close;
+    console.log(result.recordset[0]);
+
+    
+
+    try{
+      console.log(result.recordset[0].Password);
+        if (result.recordset[0].Password == null){
+         res.send("no user found");
+          rertun;}
+         const valid = await bcrypt.compare(req.body.password, result.recordset[0].Password); console.log(valid);
+        if (valid){
+          console.log("You are logged in");
+          res.send("you are logged in");
+    }  
+        } catch{
+          console.log("No username and/or massword match")
+          res.status(500).send("no user name or password matched")
+        }
+
+   
+    
+   
+  });
 });
 
 app.post("/registered", async function (req, res) {
   console.log("email is ", req.body.email);
-  const salt = await bcrypt.genSalt(10);
-  console.log("the salt is", salt);
+  //const salt = await bcrypt.genSalt(10);
+  //console.log("the salt is", salt);
   console.log("the password is", req.body.password); // To remove in production!!!
 
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
   console.log("the hasedPassword is", hashedPassword);
 
-  console.log(salt);
   console.log("I received a post request on /registered");
   // connect to your database
 
@@ -77,13 +118,13 @@ app.post("/registered", async function (req, res) {
 
     // query to the database and get the records
     const query = `
-        INSERT INTO Users (CompanyCode,Email,Password,Salt)
-        VALUES (@companyCode,@email,@hashedPassword, @salt)
+        INSERT INTO Users (CompanyCode,Email,Password)
+        VALUES (@companyCode,@email,@hashedPassword)
     `;
-    request.input("companyCode", sql.VarChar, req.body.companyCode);
-    request.input("email", sql.VarChar, req.body.email);
-    request.input("hashedPassword", sql.VarChar, hashedPassword);
-    request.input("salt", sql.VarChar, salt);
+    request.input("companyCode", sql.NVarChar(50), req.body.companyCode);
+    request.input("email", sql.NVarChar(50), req.body.email);
+    request.input("hashedPassword", sql.NVarChar, hashedPassword);
+    //request.input("salt", sql.NChar(50), salt);
     //req.body.companyCode','req.body.email','hashedPassword', 'salt'
     const result = await request.query(query);
     console.log(result);
