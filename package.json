@@ -1,18 +1,20 @@
 {
-  "name": "file_metadata",
+  "name": "webtracker",
   "version": "0.0.1",
-  "description": "API project for freeCodeCamp",
+  "description": "Webtracker for ICL",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "devStart": "nodemon index.js"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^8.6.0",
     "express": "^4.16.4",
     "jquery": "^3.7.1",
+    "mssql": "^10.0.2",
     "multer": "^1.4.5-lts.1",
     "npm": "^10.5.0"
   },
@@ -24,5 +26,8 @@
     "node",
     "express"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
 }
