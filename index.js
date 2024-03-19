@@ -36,11 +36,9 @@ app.get("/data", function (req, res) {
       return res.status(500).send("Failed to connect to the database");
     }
 
-    // create Request object
-    var request = new sql.Request();
+    var request = new sql.Request();     // create Request object
 
-    // query to the database and get the records
-    request.query("select * from Users", function (err, recordset) {
+    request.query("select * from Users", function (err, recordset) {     // query to the database and get the records
       if (err) console.log(err);
 
       // send records as a response
@@ -59,22 +57,20 @@ app.get("/views/logo.jpg", function (req, res) {
 
 app.post("/loggedin", async function (req, res) {
   console.log("email is ", req.body.email);
-  console.log("the password is", req.body.password); // To remove in production!!!
   console.log("I received a post request on /loggedin");
-  // connect to your database
 
-  sql.connect(config, async function (err) {
+  sql.connect(config, async function (err) {   // connect to your database
     if (err) console.log(err);
 
-    // create Request object
-    var request = new sql.Request();
 
-    // query to the database and get the records
-    const query = `
-        SELECT  CompanyCode,Email,Password,Salt
+    var request = new sql.Request();     // create Request object
+
+
+    const query = `     
+        SELECT  CompanyCode,Email,Password,Salt,Active
         FROM Users
         WHERE Email = @email
-    `;
+    `; // query to the database and get the records
 
     request.input("email", sql.NVarChar(50), req.body.email);
     const result = await request.query(query);
@@ -83,32 +79,48 @@ app.post("/loggedin", async function (req, res) {
 
     try {
       console.log(result.recordset[0].Password);
+
+      if (result.recordset[0].Active == 0) {
+        res.send("Please contact an admin at ICL to activate your accout");
+        return;
+      }
+
       if (result.recordset[0].Password == null) {
         res.send("no user found");
         return;
       }
+      
       const valid = await bcrypt.compare(
         req.body.password,
         result.recordset[0].Password
       );
       console.log(valid);
       if (valid) {
-        console.log("You are logged in");
         const company = result.recordset[0].CompanyCode;
-        console.log("company", company);
+        console.log("You are loggedn into the company:", company);
 
         const content = fs.readFileSync("data/data.csv", "utf8");
-        // console.log(content);
-
-        // Replace 'YourColumnName' with the actual column name you want to filter by
-        // Replace 'YourValue' with the value you want the column to match
+        //console.log(content);
         Papa.parse(content, {
           header: true,
           complete: async function (result) {
             const filteredData = result.data.filter(function (row) {
+             
               return row.Carrier === company;
-            });
+            }).map(function(row){
+               const entryParts = row['Entry Numbers'].split(" ");
+                   if (entryParts.length >= 3) {
+                  // Assign the MRN part to the new MRN property
+                  // Assuming '24GB2LSGYJIA4Y3AR1' is always the third part based on your example
+                   row['Entry Numbers'] = entryParts[1]; // This assumes '24GB2LSGYJIA4Y3AR1' is always the third part
+                   } else {
+                 // Assign some default value or leave it empty if MRN cannot be parsed
+                   row['Entry Numbers'] = ''; // or some default value
+                  }
+                  return row;
+                });
             console.log("filtered data", filteredData);
+            console.log("datatype of filteredata", typeof(filteredData));
             res.render("entries", { data: filteredData });
           },
         });
@@ -156,7 +168,7 @@ app.post("/registered", async function (req, res) {
     const result = await request.query(query);
     console.log(result);
     await sql.close();
-    res.send("You are registered");
+    res.send("You are registered. Please contact and ICL admit for your account to be activated");
   });
 });
 
