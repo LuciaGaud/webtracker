@@ -36,9 +36,10 @@ app.get("/data", function (req, res) {
       return res.status(500).send("Failed to connect to the database");
     }
 
-    var request = new sql.Request();     // create Request object
+    var request = new sql.Request(); // create Request object
 
-    request.query("select * from Users", function (err, recordset) {     // query to the database and get the records
+    request.query("select * from Users", function (err, recordset) {
+      // query to the database and get the records
       if (err) console.log(err);
 
       // send records as a response
@@ -54,17 +55,15 @@ app.get("/", function (req, res) {
 app.get("/views/logo.jpg", function (req, res) {
   res.sendFile(process.cwd() + "/views/logo.jpg");
 });
-
+//--------------Login-----------------
 app.post("/loggedin", async function (req, res) {
   console.log("email is ", req.body.email);
   console.log("I received a post request on /loggedin");
-
-  sql.connect(config, async function (err) {   // connect to your database
+  sql.connect(config, async function (err) {
+    // connect to your database
     if (err) console.log(err);
 
-
-    var request = new sql.Request();     // create Request object
-
+    var request = new sql.Request(); // create Request object
 
     const query = `     
         SELECT  CompanyCode,Email,Password,Salt,Active
@@ -89,7 +88,7 @@ app.post("/loggedin", async function (req, res) {
         res.send("no user found");
         return;
       }
-      
+
       const valid = await bcrypt.compare(
         req.body.password,
         result.recordset[0].Password
@@ -98,35 +97,15 @@ app.post("/loggedin", async function (req, res) {
       if (valid) {
         const company = result.recordset[0].CompanyCode;
         console.log("You are loggedn into the company:", company);
-
         const content = fs.readFileSync("data/data.csv", "utf8");
         //console.log(content);
-        Papa.parse(content, {
-          header: true,
-          complete: async function (result) {
-            const filteredData = result.data.filter(function (row) {
-             
-              return row.Carrier === company;
-            }).map(function(row){
-               const entryParts = row['Entry Numbers'].split(" ");
-                   if (entryParts.length >= 3) {
-                  // Assign the MRN part to the new MRN property
-                  // Assuming '24GB2LSGYJIA4Y3AR1' is always the third part based on your example
-                   row['Entry Numbers'] = entryParts[1]; // This assumes '24GB2LSGYJIA4Y3AR1' is always the third part
-                   } else {
-                 // Assign some default value or leave it empty if MRN cannot be parsed
-                   row['Entry Numbers'] = ''; // or some default value
-                  }
-                  return row;
-                });
-            console.log("filtered data", filteredData);
-            console.log("datatype of filteredata", typeof(filteredData));
-            res.render("entries", { data: filteredData });
-          },
-        });
 
-        //   res.sendFile(process.cwd() + "/views/entries.ejs")
+        const filteredData = processCSVdata(content, company);
+        console.log("here the filteredData", filteredData);
+        res.render("entries", { data: filteredData });
       }
+
+      //   res.sendFile(process.cwd() + "/views/entries.ejs")
     } catch {
       console.log("No username and/or massword match");
       res.status(500).send("no user name or password matched");
@@ -134,27 +113,18 @@ app.post("/loggedin", async function (req, res) {
   });
 });
 //-------------Registration endpoint-----------------
+
 app.post("/registered", async function (req, res) {
   console.log("email is ", req.body.email);
-  //const salt = await bcrypt.genSalt(10);
-  //console.log("the salt is", salt);
-  console.log("the password is", req.body.password); // To remove in production!!!
-
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
-  console.log("the hasedPassword is", hashedPassword);
-
   console.log("I received a post request on /registered");
-  // connect to your database
-
   sql.connect(config, async function (err) {
     if (err) {
       console.log(err);
       return res.status(500).send("Failed to connect to the database");
     }
-
     // create Request object
     var request = new sql.Request();
-
     // query to the database and get the records
     const query = `
         INSERT INTO Users (CompanyCode,Email,Password)
@@ -163,14 +133,41 @@ app.post("/registered", async function (req, res) {
     request.input("companyCode", sql.NVarChar(50), req.body.companyCode);
     request.input("email", sql.NVarChar(50), req.body.email);
     request.input("hashedPassword", sql.NVarChar, hashedPassword);
-    //request.input("salt", sql.NChar(50), salt);
-    //req.body.companyCode','req.body.email','hashedPassword', 'salt'
     const result = await request.query(query);
     console.log(result);
     await sql.close();
-    res.send("You are registered. Please contact and ICL admit for your account to be activated");
+    res.send(
+      "You are registered. Please contact and ICL admit for your account to be activated"
+    );
   });
 });
+
+function processCSVdata(content, company) {
+  const parsedCSV = Papa.parse(content, {
+    header: true,
+    complete: async function (result) {
+      console.log("I have parsed the CSV");
+    },
+  });
+  console.log("parsedCSV", parsedCSV);
+  const filteredData = parsedCSV.data
+    .filter(function (row) {
+      return row.Carrier === company;
+    })
+    .map(function (row) {
+      const entryParts = row["Entry Numbers"].split(" ");
+      if (entryParts.length >= 3) {
+        row["Entry Numbers"] = entryParts[1]; 
+      } else {
+        row["Entry Numbers"] = ""; // Assign some default value or leave it empty if MRN cannot be parsed
+      }
+      return row;
+    });  // here ends complete()
+
+
+  console.log("FilteredData after complete()", filteredData);
+  return filteredData;
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, function () {
