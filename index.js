@@ -1,16 +1,19 @@
-var express = require("express");
-var cors = require("cors");
-var multer = require("multer");
+
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
 const { urlencoded } = require("body-parser"); //to get the post result from the html and more
 const upload = multer({ dest: "uploads/" });
 const registered = [];
 const bcrypt = require("bcrypt");
 const fs = require("fs");
+const fs2 = require("node:fs/promises");
+const path = require("path");
 const Papa = require("papaparse");
 require("dotenv").config();
-var sql = require("mssql");
-var app = express();
-var config = {
+const sql = require("mssql");
+const app = express();
+const config = {
   user: process.env.USER,
   password: process.env.PASSWORD,
   server: process.env.SERVER,
@@ -20,6 +23,10 @@ var config = {
     trustServerCertificate: true, // Change this to false in production!!!
   },
 };
+const test = findNewestCsv('./data');
+findNewestCsv('./data')
+  .then(fileName => console.log("Newest file is ",fileName))
+  .catch(console.error);
 
 app.set("view engine", "ejs");
 app.use(express.json());
@@ -52,6 +59,8 @@ app.get("/", function (req, res) {
   res.sendFile(process.cwd() + "/views/index.html");
 });
 
+
+
 app.get("/views/logo.jpg", function (req, res) {
   res.sendFile(process.cwd() + "/views/logo.jpg");
 });
@@ -59,6 +68,7 @@ app.get("/views/logo.jpg", function (req, res) {
 app.post("/loggedin", async function (req, res) {
   console.log("email is ", req.body.email);
   console.log("I received a post request on /loggedin");
+
   sql.connect(config, async function (err) {
     // connect to your database
     if (err) console.log(err);
@@ -98,10 +108,7 @@ app.post("/loggedin", async function (req, res) {
         const company = result.recordset[0].CompanyCode;
         console.log("You are loggedn into the company:", company);
         const content = fs.readFileSync("data/data.csv", "utf8");
-        //console.log(content);
-
         const filteredData = processCSVdata(content, company);
-        console.log("here the filteredData", filteredData);
         res.render("entries", { data: filteredData });
       }
 
@@ -134,7 +141,6 @@ app.post("/registered", async function (req, res) {
     request.input("email", sql.NVarChar(50), req.body.email);
     request.input("hashedPassword", sql.NVarChar, hashedPassword);
     const result = await request.query(query);
-    console.log(result);
     await sql.close();
     res.send(
       "You are registered. Please contact and ICL admit for your account to be activated"
@@ -142,6 +148,12 @@ app.post("/registered", async function (req, res) {
   });
 });
 
+const port = process.env.PORT || 3000;
+app.listen(port, function () {
+  console.log("Your app is listening on port " + port);
+});
+
+//---------------Functions----------------------
 function processCSVdata(content, company) {
   const parsedCSV = Papa.parse(content, {
     header: true,
@@ -149,7 +161,7 @@ function processCSVdata(content, company) {
       console.log("I have parsed the CSV");
     },
   });
-  console.log("parsedCSV", parsedCSV);
+
   const filteredData = parsedCSV.data
     .filter(function (row) {
       return row.Carrier === company;
@@ -163,13 +175,84 @@ function processCSVdata(content, company) {
       }
       return row;
     });  // here ends complete()
-
-
-  console.log("FilteredData after complete()", filteredData);
   return filteredData;
 }
 
-const port = process.env.PORT || 3000;
-app.listen(port, function () {
-  console.log("Your app is listening on port " + port);
-});
+//A function which returns the newest csv file in a folder
+async function findNewestCsv(dirPath) {
+  try{
+    const stat = await fs2.stat(dirPath);
+    console.log("the stat object is",stat);
+    if (!stat.isDirectory()) {
+      throw new Error('Path is not a directory');
+    }
+    const files = await fs2.readdir(dirPath);
+      let newest = null;
+      let latestTime = 0
+    // Iterate through each file in the directory
+    for (const file of files) {
+      if (path.extname(file).toLowerCase() === '.csv') {
+          const filePath = path.join(dirPath, file);
+          const fileStat = await fs2.stat(filePath);
+
+          // Update newest file if this file is newer
+          if (fileStat.mtime.getTime() > latestTime) {
+              newest = file;
+              latestTime = fileStat.mtime.getTime();
+          }
+      }
+      }
+      // Check if we found a CSV file
+      if (newest === null) {
+        throw new Error('No CSV files found');
+    }
+
+    return newest;
+  }catch (err){
+    throw err; // Rethrow any errors encountered
+  }
+
+
+}
+
+
+/*
+async function findNewestCsv(dirPath) {
+  try {
+      // Check if the directory exists
+      const stat = await fs.stat(dirPath);
+      if (!stat.isDirectory()) {
+          throw new Error('Path is not a directory');
+      }
+
+      const files = await fs.readdir(dirPath);
+      let newest = null;
+      let latestTime = 0;
+
+      // Iterate through each file in the directory
+      for (const file of files) {
+          if (path.extname(file).toLowerCase() === '.csv') {
+              const filePath = path.join(dirPath, file);
+              const fileStat = await fs.stat(filePath);
+
+              // Update newest file if this file is newer
+              if (fileStat.mtime.getTime() > latestTime) {
+                  newest = file;
+                  latestTime = fileStat.mtime.getTime();
+              }
+          }
+      }
+
+      // Check if we found a CSV file
+      if (newest === null) {
+          throw new Error('No CSV files found');
+      }
+
+      return newest;
+  } catch (err) {
+      throw err; // Rethrow any errors encountered
+  }
+}
+
+*/
+
