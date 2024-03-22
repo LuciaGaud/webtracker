@@ -6,6 +6,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+    <script src="/scripts.js"></script>
     <title>ETA this week</title>
     <link rel="stylesheet" href="public/style.css">
 </head>
@@ -13,23 +14,23 @@
 <body class="htmlcontent">
   <header>
     <img class="logo" src="views/logo.jpg" alt="Your Logo">
-    <h2>ETA TWO WEEKS</h2>
 </header>
 <body>
-    <h1>Hauliers Tracker</h1>
-    <table border="1">
+    <h1 class="title">Hauliers Tracker</h1>
+    <button type="button" onclick="downloadTableAsXLS()">Download</button>
+    <table border="1" id="csvTable">
         <thead>
             <tr>
                 <% Object.keys(data[0]).forEach(function(key) { %>
-                    <th><%= key %></th>
+                    <th onclick="sortTableByColumn('<%= key %>')" class ="<%= key %>"><%= key %></th>
                 <% }); %>
             </tr>
         </thead>
         <tbody>
             <% data.forEach(function(row) { %>
                 <tr>
-                    <% Object.values(row).forEach(function(value) { %>
-                        <td><%= value %></td>
+                    <% Object.entries(row).forEach(function([key, value]) { %>
+                        <td data-column="<%= key %>" class ="<%= key %>"><%= value %></td>
                     <% }); %>
                 </tr>
             <% }); %>
@@ -37,3 +38,4 @@
     </table>
 </body>
 </html>
+
