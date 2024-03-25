@@ -12,13 +12,23 @@
 </head>
 
 <body class="htmlcontent">
+    <nav>
+        
+        <ul>
+            
+                <li><a href="#short_bio">LOGOUT</a></li>
+                <li><a href="#projects">PROFILE</a></li>
+                
+            
+          </ul>
+    
+    </nav>
   <header>
     <img class="logo" src="views/logo.jpg" alt="Your Logo">
-</header>
-<body>
-    <h1 class="title">Hauliers Tracker</h1>
+    <h1 class="title">Entries Status Summary</h1>
+  </header>
     <button type="button" onclick="downloadTableAsXLS()">Download</button>
-    <table border="1" id="csvTable">
+    <table border="1" class="table-sortable" id="csvTable">
         <thead>
             <tr>
                 <% Object.keys(data[0]).forEach(function(key) { %>
