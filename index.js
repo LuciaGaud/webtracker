@@ -1,4 +1,5 @@
 const express = require("express");
+const session = require('express-session');
 const cors = require("cors");
 const multer = require("multer");
 const { urlencoded } = require("body-parser"); //to get the post result from the html and more
@@ -7,8 +8,8 @@ const registered = [];
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const fs2 = require("node:fs/promises"); //promise based
-const csv = require('async-csv');
-const ObjectsToCsv = require('objects-to-csv');
+const csv = require("async-csv");
+const ObjectsToCsv = require("objects-to-csv");
 const path = require("path");
 const Papa = require("papaparse");
 require("dotenv").config();
@@ -31,6 +32,11 @@ app.use(cors());
 //app.use(multer);
 app.use("/public", express.static(process.cwd() + "/public"));
 app.use(express.urlencoded({ extended: true })); // In short this makes req.body possible
+app.use(session({
+    secret: process.env.SESSION_SECRET, 
+    saveUninitialized: true,
+    cookie: { secure: false } // Set to true if using https
+}));
 
 app.get("/data", function (req, res) {
     // connect to your database
@@ -63,7 +69,6 @@ app.get("/views/logo.jpg", function (req, res) {
 });
 //--------------Login-----------------
 app.post("/loggedin", async function (req, res) {
-    console.log("email is ", req.body.email);
     console.log("I received a post request on /loggedin");
 
     sql.connect(config, async function (err) {
@@ -81,11 +86,8 @@ app.post("/loggedin", async function (req, res) {
         request.input("email", sql.NVarChar(50), req.body.email);
         const result = await request.query(query);
         await sql.close;
-        console.log(result.recordset[0]);
 
         try {
-            console.log(result.recordset[0].Password);
-
             if (result.recordset[0].Active == 0) {
                 res.send(
                     "Please contact an admin at ICL to activate your accout"
@@ -104,12 +106,13 @@ app.post("/loggedin", async function (req, res) {
             );
             console.log(valid);
             if (valid) {
+                req.session.userId = result.recordset[0].Email; //opening a session
+                //console.log("user id is ", req.session.userId,"result.recordset[0].email is",result.recordset[0].Email);
                 const company = result.recordset[0].CompanyCode;
                 console.log("You are loggedn into the company:", company);
                 const fileName = await findNewestCsv("./data");
                 const content = fs.readFileSync("data/" + fileName, "utf8");
                 const filteredData = processCSVdata(content, company);
-                console.log("filteredData is of type",typeof(filteredData),"and filtered data is",filteredData);
                 res.render("entries", { data: filteredData });
             }
 
@@ -148,6 +151,16 @@ app.post("/registered", async function (req, res) {
         );
     });
 });
+//-----------------Logout endpoint -------------------
+app.post('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).send('Could not log out, please try again.');
+        } else {
+            res.send('Logged out successfully');
+        }
+    });
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, function () {
@@ -169,11 +182,11 @@ function processCSVdata(content, company) {
             return row.Carrier === company;
         })
         .map(function (row) {
-            const entryParts = row["Entry Numbers"].split(" ");
+            const entryParts = row["MRN"].split(" ");
             if (entryParts.length >= 3) {
-                row["Entry Numbers"] = entryParts[1];
+                row["MRN"] = entryParts[1];
             } else {
-                row["Entry Numbers"] = ""; // Assign some default value or leave it empty if MRN cannot be parsed
+                row["MRN"] = ""; // Assign some default value or leave it empty if MRN cannot be parsed
             }
             return row;
         }); // here ends complete()
@@ -200,7 +213,7 @@ async function findNewestCsv(dirPath) {
                 // Update newest file if this file is newer
                 if (fileStat.mtime.getTime() > latestTime) {
                     newest = file;
-                    console.log("latest file is",file);
+                    console.log("latest file is", file);
                     latestTime = fileStat.mtime.getTime();
                 }
             }
@@ -217,7 +230,15 @@ async function findNewestCsv(dirPath) {
 }
 //----------Sorting function for the table--------------------
 function sortTableByColumn(columnName) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    var table,
+        rows,
+        switching,
+        i,
+        x,
+        y,
+        shouldSwitch,
+        dir,
+        switchcount = 0;
     table = document.getElementById("myTable");
     switching = true;
     dir = "asc"; // Set the sorting direction to ascending:
