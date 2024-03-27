@@ -1,5 +1,4 @@
 const express = require("express");
-const session = require('express-session');
 const cors = require("cors");
 const multer = require("multer");
 const { urlencoded } = require("body-parser"); //to get the post result from the html and more
@@ -32,11 +31,7 @@ app.use(cors());
 //app.use(multer);
 app.use("/public", express.static(process.cwd() + "/public"));
 app.use(express.urlencoded({ extended: true })); // In short this makes req.body possible
-app.use(session({
-    secret: process.env.SESSION_SECRET, 
-    saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using https
-}));
+
 
 app.get("/data", function (req, res) {
     // connect to your database
@@ -106,7 +101,6 @@ app.post("/loggedin", async function (req, res) {
             );
             console.log(valid);
             if (valid) {
-                req.session.userId = result.recordset[0].Email; //opening a session
                 //console.log("user id is ", req.session.userId,"result.recordset[0].email is",result.recordset[0].Email);
                 const company = result.recordset[0].CompanyCode;
                 console.log("You are loggedn into the company:", company);
@@ -151,16 +145,7 @@ app.post("/registered", async function (req, res) {
         );
     });
 });
-//-----------------Logout endpoint -------------------
-app.post('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).send('Could not log out, please try again.');
-        } else {
-            res.send('Logged out successfully');
-        }
-    });
-});
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, function () {

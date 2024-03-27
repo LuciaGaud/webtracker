@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
     <script src="/scripts.js"></script>
     <title>ETA this week</title>
@@ -13,39 +13,39 @@
 
 <body class="htmlcontent">
     <nav>
-        
+
         <ul>
-            
-                <li><a href="#short_bio">LOGOUT</a></li>
-                <li><a href="#projects">PROFILE</a></li>
-                
-            
-          </ul>
-    
+            <li><a href="/">LOGOUT</a></li>
+        </ul>
+
     </nav>
-  <header>
-    <img class="logo" src="views/logo.jpg" alt="Your Logo">
-    <h1 class="title">Entries Status Summary</h1>
-  </header>
+    <header>
+        <img class="logo" src="views/logo.jpg" alt="Your Logo">
+        <h1 class="title">Entries Status Summary</h1>
+    </header>
     <button type="button" onclick="downloadTableAsXLS()">Download</button>
     <table border="1" class="table-sortable" id="csvTable">
         <thead>
             <tr>
                 <% Object.keys(data[0]).forEach(function(key) { %>
-                    <th onclick="sortTableByColumn('<%= key %>')" class ="<%= key %>"><%= key %></th>
-                <% }); %>
+                    <th onclick="sortTableByColumn('<%= key %>')" class="<%= key %>">
+                        <%= key %>
+                    </th>
+                    <% }); %>
             </tr>
         </thead>
         <tbody>
             <% data.forEach(function(row) { %>
                 <tr>
                     <% Object.entries(row).forEach(function([key, value]) { %>
-                        <td data-column="<%= key %>" class ="<%= key %>"><%= value %></td>
-                    <% }); %>
+                        <td data-column="<%= key %>" class="<%= key %>">
+                            <%= value %>
+                        </td>
+                        <% }); %>
                 </tr>
-            <% }); %>
+                <% }); %>
         </tbody>
     </table>
 </body>
-</html>
 
+</html>
