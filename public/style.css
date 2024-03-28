@@ -30,6 +30,7 @@ header {
   max-width: 400px; 
   height: auto;
   margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
 /* Forms and container styling */
@@ -270,17 +271,26 @@ table {
   text-align: left;
   max-width: 98vw;
   font-size: 0.875rem;
-  flex:1
+  
+
 }
 
 /* Style the table headers */
-th {
+.table-sortable thead tr th  {
   background-color: var(--paleblue);
+  cursor: pointer;
   font-size: auto;
-  text-align: left;
   border: 1px solid #ddd;
   padding: 10px 3px ;
   color: var(--blueicl);
+  align-items: center;
+
+}
+.table-sortable thead tr th div {
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+
 }
 
 /* Style the table cells */
@@ -289,6 +299,7 @@ td {
   border: 1px solid #ddd;
   font-size: auto;
 }
+
 
 /* Style alternating rows for better readability */
 tbody tr:nth-child(even) {
@@ -302,26 +313,18 @@ tbody tr:hover {
 
 
 /* Table sortable style */
-.table-sortable th {
-	cursor: pointer;
-}
 
-.table-sortable .th-sort-asc::after {
-	content: "\25b4";
-}
 
-.table-sortable .th-sort-desc::after {
-	content: "\25be";
-}
 
-.table-sortable .th-sort-asc::after,
-.table-sortable .th-sort-desc::after {
-	margin-left: 5px;
-}
-
-.table-sortable .th-sort-asc,
-.table-sortable .th-sort-desc {
-	background: rgba(0, 0, 0, 0.1);
+.table-sortable thead tr .unsorted div::after {
+  content: "\25b4\25be"; /* Unicode for a small black downward-pointing triangle */
+  /* Adjust size as needed */
+  margin-right: 5px; /* Space out the icon from the header text */
+  writing-mode: vertical-rl;
+  letter-spacing: -0.8cap;
+  justify-self: end;
+  display: inline;
+  justify-content: space-evenly;
 }
 /*Animations*/
 @keyframes fromleftAnimation {

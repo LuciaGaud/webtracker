@@ -28,9 +28,11 @@
         <thead>
             <tr>
                 <% Object.keys(data[0]).forEach(function(key) { %>
-                    <th onclick="sortTableByColumn('<%= key %>')" class="<%= key %>">
-                        <%= key %>
+                    
+                    <th onclick="sortTableByColumn('<%= key %>','csvTable')" class="<%= key %> unsorted">
+                        <div><%= key %></div>
                     </th>
+                
                     <% }); %>
             </tr>
         </thead>
