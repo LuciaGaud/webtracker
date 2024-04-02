@@ -41,7 +41,7 @@ app.get("/data", function (req, res) {
             return res.status(500).send("Failed to connect to the database");
         }
 
-        var request = new sql.Request(); // create Request object
+        let request = new sql.Request(); // create Request object
 
         request.query("select * from Users", function (err, recordset) {
             // query to the database and get the records
@@ -70,7 +70,7 @@ app.post("/loggedin", async function (req, res) {
         // connect to your database
         if (err) console.log(err);
 
-        var request = new sql.Request(); // create Request object
+        let request = new sql.Request(); // create Request object
 
         const query = `     
         SELECT  CompanyCode,Email,Password,Salt,Active
@@ -129,7 +129,7 @@ app.post("/registered", async function (req, res) {
             return res.status(500).send("Failed to connect to the database");
         }
         // create Request object
-        var request = new sql.Request();
+        let request = new sql.Request();
         // query to the database and get the records
         const query = `
         INSERT INTO Users (CompanyCode,Email,Password)
@@ -215,7 +215,7 @@ async function findNewestCsv(dirPath) {
 }
 //----------Sorting function for the table--------------------
 function sortTableByColumn(columnName) {
-    var table,
+    let table,
         rows,
         switching,
         i,
