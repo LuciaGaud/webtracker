@@ -78,7 +78,7 @@ app.post("/loggedin", async function (req, res) {
         WHERE Email = @email
     `; // query to the database and get the records
 
-        request.input("email", sql.NVarChar(50), req.body.email);
+        request.input("email", sql.NVarChar(50), req.body.email); // Where @email is using req.body.email with a type NVarChar(50)
         const result = await request.query(query);
         await sql.close;
 
@@ -91,7 +91,7 @@ app.post("/loggedin", async function (req, res) {
             }
 
             if (result.recordset[0].Password == null) {
-                res.send("no user found");
+                res.send("No user found");
                 return;
             }
 
@@ -120,6 +120,7 @@ app.post("/loggedin", async function (req, res) {
 //-------------Registration endpoint-----------------
 
 app.post("/registered", async function (req, res) {
+//validateRegistration(req.body.email)
     console.log("email is ", req.body.email);
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     console.log("I received a post request on /registered");

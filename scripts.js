@@ -1,4 +1,10 @@
 //-----Not server side Javascript---------
+const emailInput = document.getElementById(email)
+const passwordInput = document.getElementById(password)
+const repeatPasswordInput = document.getElementById(repeat-password)
+const companyCodeInput = document.getElementById(company-code)
+
+
 function sortTableByColumn(columnName,tableName) {
     var table,
         rows,
