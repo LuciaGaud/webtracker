@@ -19,10 +19,11 @@
     <div class="form">
       
       <form class="register-form" method="POST" action="/registered">
-        <input type="text" placeholder="Myname" name="name"/>
-        <input type="password" placeholder="password" name="password"/>
-        <input type="text" placeholder="info@email.com" name="email"/>
-        <input type="text" placeholder="ABC123HV"name="companyCode"/>
+        <input type="text" placeholder="info@email.com" name="email" id="email"/>
+        <input type="text" placeholder="ABC123HV"name="companyCode" id="comapany-code"/>
+        <input type="password" placeholder="Password" name="password" id="password"/>
+        <input type="password" placeholder="Repeat Password" name="repeatPassword" id="repeat-password"/>
+
         <button>create</button>
         <p class="message">Already registered? <a href="#">Sign In</a></p>
       </form>

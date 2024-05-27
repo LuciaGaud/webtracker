@@ -3,7 +3,7 @@ GET http://localhost:3000
 #########
 
 POST http://localhost:3000/loggedin 
-Content-Type: text/xml
+Content-Type: application/json
 
 { 
     "email": "lucia.e@iclgo.com",
@@ -18,8 +18,8 @@ POST http://localhost:3000/registered
 Content-Type: application/json
 
 { 
-    "email": "lucia.e@iclgo.com",
-    "companyCode" : "INTCARLON",
+    "email": "freightline@mail.com",
+    "companyCode" : "FRELINRTM",
     "password": "IndovinaChi2024"
 
 }
